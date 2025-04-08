@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { 
@@ -144,12 +143,12 @@ const ServerForm = ({ onClose, onSubmit }: ServerFormProps) => {
   };
   
   const handleSubmit = (data: ServerFormValues) => {
-    // Process buildPlan from string to array
+    // Process buildPlan from string to array if it's a string
     const processedData = {
       ...data,
-      buildPlan: data.buildPlan instanceof Array ? 
-        data.buildPlan : 
-        data.buildPlan.split(",").map(item => item.trim())
+      buildPlan: typeof data.buildPlan === 'string' ? 
+        data.buildPlan.split(",").map(item => item.trim()) : 
+        data.buildPlan
     };
     
     // Check for validation messages
@@ -252,8 +251,7 @@ const ServerForm = ({ onClose, onSubmit }: ServerFormProps) => {
                     <FormControl>
                       <div className="space-y-1">
                         <Input 
-                          {...field} 
-                          value={field.value instanceof Array ? field.value.join(",") : field.value}
+                          value={Array.isArray(field.value) ? field.value.join(",") : field.value}
                           placeholder="plan1,plan2,plan3" 
                           required 
                           onBlur={(e) => handleFieldChange("buildPlan", e.target.value)}
