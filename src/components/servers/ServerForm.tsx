@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Form } from "@/components/ui/form";
@@ -58,7 +57,7 @@ const ServerForm = ({ onClose, onSubmit }: ServerFormProps) => {
       ...data,
       buildPlan: Array.isArray(data.buildPlan) 
         ? data.buildPlan 
-        : typeof data.buildPlan === 'string' 
+        : typeof data.buildPlan === 'string'
           ? data.buildPlan.split(",").map(item => item.trim()) 
           : []
     };
