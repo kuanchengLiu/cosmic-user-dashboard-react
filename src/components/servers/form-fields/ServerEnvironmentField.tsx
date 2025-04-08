@@ -3,48 +3,48 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/comp
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Control } from "react-hook-form";
 import { ServerFormValues } from "../utils/types";
-import { serverTypes } from "../utils/types";
 
-interface ServerTypeFieldProps {
+interface ServerEnvironmentFieldProps {
   control: Control<ServerFormValues>;
   validationMessage?: string;
   handleFieldChange?: (field: string, value: string) => void;
 }
 
-export const ServerTypeField = ({ 
+export const ServerEnvironmentField = ({ 
   control, 
   validationMessage,
   handleFieldChange 
-}: ServerTypeFieldProps) => {
+}: ServerEnvironmentFieldProps) => {
   return (
     <FormField
       control={control}
-      name="type"
+      name="environment"
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Server Type*</FormLabel>
+          <FormLabel>Environment*</FormLabel>
           <FormControl>
             <RadioGroup
               onValueChange={(value) => {
                 field.onChange(value);
                 if (handleFieldChange) {
-                  handleFieldChange('type', value);
+                  handleFieldChange('environment', value);
                 }
               }}
               defaultValue={field.value}
               className="flex flex-col space-y-1"
             >
-              {serverTypes.map((type) => (
-                <div key={type} className="flex items-center space-x-2">
-                  <RadioGroupItem value={type} id={type.replace(/\s+/g, '-').toLowerCase()} />
-                  <label 
-                    htmlFor={type.replace(/\s+/g, '-').toLowerCase()} 
-                    className="text-sm font-medium leading-none cursor-pointer"
-                  >
-                    {type}
-                  </label>
-                </div>
-              ))}
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="beta" id="beta" />
+                <label htmlFor="beta" className="text-sm font-medium leading-none cursor-pointer">
+                  Beta
+                </label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="production" id="production" />
+                <label htmlFor="production" className="text-sm font-medium leading-none cursor-pointer">
+                  Production
+                </label>
+              </div>
             </RadioGroup>
           </FormControl>
           {validationMessage ? (
