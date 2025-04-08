@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Edit, MoreVertical, Plus, Search, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import ServerForm, { ServerFormValues } from "./ServerForm";
 
 interface Server {
   id: number;
@@ -28,10 +29,16 @@ interface Server {
   status: "online" | "offline" | "maintenance";
   type: string;
   lastUpdated: string;
+  buildPlan: string[];
+  timeOffset: string;
+  pmFullname: string;
+  l2Fullname: string;
+  site: string;
 }
 
 const ServerTable = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [showForm, setShowForm] = useState(false);
   
   // Sample data - in a real app, this would come from an API
   const [servers, setServers] = useState<Server[]>([
@@ -42,6 +49,11 @@ const ServerTable = () => {
       status: "online",
       type: "Web Server",
       lastUpdated: "2025-04-08 09:30:45",
+      buildPlan: ["deploy", "test"],
+      timeOffset: "UTC+08",
+      pmFullname: "Project Manager",
+      l2Fullname: "L2 Support",
+      site: "SiteA",
     },
     {
       id: 2,
@@ -50,6 +62,11 @@ const ServerTable = () => {
       status: "online",
       type: "Database Server",
       lastUpdated: "2025-04-08 08:45:12",
+      buildPlan: ["backup", "restore"],
+      timeOffset: "UTC+08",
+      pmFullname: "Project Manager",
+      l2Fullname: "L2 Support",
+      site: "SiteB",
     },
     {
       id: 3,
@@ -58,6 +75,11 @@ const ServerTable = () => {
       status: "maintenance",
       type: "File Server",
       lastUpdated: "2025-04-07 23:15:30",
+      buildPlan: ["sync", "backup"],
+      timeOffset: "UTC+08",
+      pmFullname: "Project Manager",
+      l2Fullname: "L2 Support",
+      site: "SiteA",
     },
     {
       id: 4,
@@ -66,6 +88,11 @@ const ServerTable = () => {
       status: "offline",
       type: "Backup Server",
       lastUpdated: "2025-04-08 02:10:18",
+      buildPlan: ["backup", "archive"],
+      timeOffset: "UTC+08",
+      pmFullname: "Project Manager",
+      l2Fullname: "L2 Support",
+      site: "SiteC",
     },
   ]);
 
@@ -86,11 +113,32 @@ const ServerTable = () => {
     (server) =>
       server.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       server.ipAddress.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      server.type.toLowerCase().includes(searchTerm.toLowerCase())
+      server.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      server.site.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      server.pmFullname.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      server.l2Fullname.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleDelete = (id: number) => {
     setServers(servers.filter((server) => server.id !== id));
+  };
+  
+  const handleCreateServer = (serverData: ServerFormValues) => {
+    const newServer: Server = {
+      id: servers.length > 0 ? Math.max(...servers.map(s => s.id)) + 1 : 1,
+      name: serverData.name,
+      ipAddress: serverData.ipAddress,
+      status: "offline", // Default status for new servers
+      type: serverData.type,
+      lastUpdated: new Date().toISOString().replace('T', ' ').substring(0, 19),
+      buildPlan: serverData.buildPlan,
+      timeOffset: serverData.timeOffset,
+      pmFullname: serverData.pmFullname,
+      l2Fullname: serverData.l2Fullname,
+      site: serverData.site,
+    };
+    
+    setServers([...servers, newServer]);
   };
 
   return (
@@ -105,13 +153,16 @@ const ServerTable = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <Button className="flex items-center gap-1">
+        <Button 
+          className="flex items-center gap-1"
+          onClick={() => setShowForm(true)}
+        >
           <Plus className="h-4 w-4" />
           Add Server
         </Button>
       </div>
 
-      <div className="rounded-md border">
+      <div className="rounded-md border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -119,6 +170,11 @@ const ServerTable = () => {
               <TableHead>IP Address</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Type</TableHead>
+              <TableHead>Build Plan</TableHead>
+              <TableHead>Time Offset</TableHead>
+              <TableHead>Project Manager</TableHead>
+              <TableHead>L2 Support</TableHead>
+              <TableHead>Site</TableHead>
               <TableHead>Last Updated</TableHead>
               <TableHead className="w-[50px]"></TableHead>
             </TableRow>
@@ -126,7 +182,7 @@ const ServerTable = () => {
           <TableBody>
             {filteredServers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center h-32 text-muted-foreground">
+                <TableCell colSpan={11} className="text-center h-32 text-muted-foreground">
                   No servers found.
                 </TableCell>
               </TableRow>
@@ -137,6 +193,11 @@ const ServerTable = () => {
                   <TableCell>{server.ipAddress}</TableCell>
                   <TableCell>{getStatusBadge(server.status)}</TableCell>
                   <TableCell>{server.type}</TableCell>
+                  <TableCell>{server.buildPlan.join(", ")}</TableCell>
+                  <TableCell>{server.timeOffset}</TableCell>
+                  <TableCell>{server.pmFullname}</TableCell>
+                  <TableCell>{server.l2Fullname}</TableCell>
+                  <TableCell>{server.site}</TableCell>
                   <TableCell>{server.lastUpdated}</TableCell>
                   <TableCell>
                     <DropdownMenu>
@@ -169,6 +230,13 @@ const ServerTable = () => {
           </TableBody>
         </Table>
       </div>
+      
+      {showForm && (
+        <ServerForm 
+          onClose={() => setShowForm(false)} 
+          onSubmit={handleCreateServer}
+        />
+      )}
     </div>
   );
 };
