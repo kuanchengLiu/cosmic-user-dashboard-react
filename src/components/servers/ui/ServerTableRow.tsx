@@ -22,7 +22,7 @@ export function ServerTableRow({ server, onDelete, onEdit }: ServerTableRowProps
         <ServerStatusBadge status={server.status} />
       </TableCell>
       <TableCell>
-        <ServerLocation location={server.location} />
+        <ServerLocation locationValue={server.location} />
       </TableCell>
       <TableCell>
         <EnvironmentBadge environment={server.environment} />

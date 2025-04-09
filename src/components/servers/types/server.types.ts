@@ -33,3 +33,19 @@ export interface ServerApiPayload {
   Location: string;
   Status: string;
 }
+
+export interface ServerFormValues {
+  name: string;
+  ipAddress: string;
+  buildPlan: string[] | string;
+  timeOffset: string;
+  pmFullname: string;
+  l2Fullname: string;
+  site: string;
+  type: string;
+  location: string;
+  environment: "beta" | "production";
+  siteMaster?: string;
+  isMaster?: boolean;
+  siteDescription?: string;
+}

@@ -19,7 +19,7 @@ interface ServerListProps {
 
 export function ServerList({ servers, onDelete, onEdit }: ServerListProps) {
   if (servers.length === 0) {
-    return <EmptyServerTable />;
+    return <EmptyServerTable colSpan={8} />;
   }
 
   return (

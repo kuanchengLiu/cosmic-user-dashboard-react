@@ -23,7 +23,7 @@ import { createServer, updateServer } from "./services/serverApiService";
 const ServerForm = ({ onClose, onSubmit, initialData, mode = "create" }: ServerFormProps) => {
   const { toast } = useToast();
   const [validationMessages, setValidationMessages] = useState<Record<string, string>>({});
-  const [activeTab, setActiveTab] = useState(initialData?.environment || "beta");
+  const [activeTab, setActiveTab] = useState<"beta" | "production">(initialData?.environment || "beta");
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const form = useForm<ServerFormValues>({
@@ -118,7 +118,7 @@ const ServerForm = ({ onClose, onSubmit, initialData, mode = "create" }: ServerF
   };
   
   const handleTabChange = (value: string) => {
-    setActiveTab(value);
+    setActiveTab(value as "beta" | "production");
     form.setValue("environment", value as "beta" | "production");
   };
   
@@ -144,8 +144,6 @@ const ServerForm = ({ onClose, onSubmit, initialData, mode = "create" }: ServerF
             
             <Form {...form}>
               <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-                {/* We're removing the ServerEnvironmentField since the tabs now handle the environment selection */}
-
                 <ServerNameField 
                   control={form.control} 
                   validationMessage={validationMessages.name}
