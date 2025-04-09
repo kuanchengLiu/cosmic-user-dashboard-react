@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Form } from "@/components/ui/form";
@@ -14,7 +15,6 @@ import { SelectUserField } from "./form-fields/SelectUserField";
 import { SiteField } from "./form-fields/SiteField";
 import { ServerTypeField } from "./form-fields/ServerTypeField";
 import { ServerLocationField } from "./form-fields/ServerLocationField";
-import { ServerEnvironmentField } from "./form-fields/ServerEnvironmentField";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const ServerForm = ({ onClose, onSubmit }: ServerFormProps) => {
@@ -104,11 +104,7 @@ const ServerForm = ({ onClose, onSubmit }: ServerFormProps) => {
             
             <Form {...form}>
               <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-                <ServerEnvironmentField 
-                  control={form.control}
-                  validationMessage={validationMessages.environment}
-                  handleFieldChange={handleFieldChange}
-                />
+                {/* We're removing the ServerEnvironmentField since the tabs now handle the environment selection */}
 
                 <ServerNameField 
                   control={form.control} 
