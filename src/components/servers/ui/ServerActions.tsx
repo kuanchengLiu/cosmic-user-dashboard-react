@@ -4,41 +4,42 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Edit, MoreVertical, Trash2 } from "lucide-react";
+import { MoreHorizontal, Trash, Edit } from "lucide-react";
+import { Server } from "../types/server.types";
 
 interface ServerActionsProps {
-  serverId: number;
-  onDelete: (id: number) => void;
+  server: Server;
+  onDelete: (server: Server) => void;
+  onEdit: (server: Server) => void;
 }
 
-export const ServerActions = ({ serverId, onDelete }: ServerActionsProps) => {
+export function ServerActions({ server, onDelete, onEdit }: ServerActionsProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-8 w-8">
-          <MoreVertical className="h-4 w-4" />
+        <Button variant="ghost" className="h-8 w-8 p-0">
           <span className="sr-only">Open menu</span>
+          <MoreHorizontal className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem className="cursor-pointer">
+        <DropdownMenuItem
+          onClick={() => onEdit(server)}
+          className="cursor-pointer"
+        >
           <Edit className="mr-2 h-4 w-4" />
           Edit
         </DropdownMenuItem>
-        <DropdownMenuItem 
+        <DropdownMenuItem
+          onClick={() => onDelete(server)}
           className="cursor-pointer text-destructive focus:text-destructive"
-          onClick={() => onDelete(serverId)}
         >
-          <Trash2 className="mr-2 h-4 w-4" />
+          <Trash className="mr-2 h-4 w-4" />
           Delete
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
-};
+}

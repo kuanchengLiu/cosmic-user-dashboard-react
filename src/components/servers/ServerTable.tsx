@@ -8,15 +8,39 @@ import { useServers } from "./hooks/useServers";
 import { ServerSearch } from "./ui/ServerSearch";
 import { ServerList } from "./ui/ServerList";
 import { filterServers } from "./utils/filterServers";
+import { DeleteServerDialog } from "./ui/DeleteServerDialog";
+import { Server } from "./types/server.types";
 
 const ServerTable = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [activeTab, setActiveTab] = useState<"all" | "beta" | "production">("all");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [serverToDelete, setServerToDelete] = useState<Server | null>(null);
   
-  const { servers, handleDelete, handleCreateServer } = useServers();
+  const { 
+    servers, 
+    handleDelete, 
+    handleCreateServer,
+    handleUpdateServer,
+    isEditModalOpen,
+    currentServer,
+    openEditModal,
+    closeEditModal
+  } = useServers();
   
   const filteredServers = filterServers(servers, activeTab, searchTerm);
+
+  const confirmDelete = (server: Server) => {
+    setServerToDelete(server);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (serverToDelete) {
+      await handleDelete(serverToDelete.id);
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -49,20 +73,26 @@ const ServerTable = () => {
         </div>
 
         <TabsContent value="all" className="mt-4">
-          <ServerList servers={filteredServers} onDelete={handleDelete} />
+          <ServerList 
+            servers={filteredServers} 
+            onDelete={confirmDelete}
+            onEdit={openEditModal}
+          />
         </TabsContent>
 
         <TabsContent value="beta" className="mt-4">
           <ServerList 
             servers={filteredServers} 
-            onDelete={handleDelete} 
+            onDelete={confirmDelete}
+            onEdit={openEditModal}
           />
         </TabsContent>
 
         <TabsContent value="production" className="mt-4">
           <ServerList 
             servers={filteredServers} 
-            onDelete={handleDelete} 
+            onDelete={confirmDelete}
+            onEdit={openEditModal}
           />
         </TabsContent>
       </Tabs>
@@ -71,8 +101,28 @@ const ServerTable = () => {
         <ServerForm 
           onClose={() => setShowForm(false)} 
           onSubmit={handleCreateServer}
+          mode="create"
         />
       )}
+
+      {isEditModalOpen && currentServer && (
+        <ServerForm
+          onClose={closeEditModal}
+          onSubmit={(data) => handleUpdateServer(currentServer.id, data)}
+          initialData={{
+            ...currentServer,
+            buildPlan: currentServer.buildPlan
+          }}
+          mode="update"
+        />
+      )}
+
+      <DeleteServerDialog
+        isOpen={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        onConfirm={handleDeleteConfirm}
+        serverName={serverToDelete?.name || ""}
+      />
     </div>
   );
 };

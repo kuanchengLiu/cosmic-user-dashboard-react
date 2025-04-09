@@ -2,6 +2,8 @@
 export interface ServerFormProps {
   onClose: () => void;
   onSubmit: (data: ServerFormValues) => void;
+  initialData?: ServerFormValues;
+  mode?: "create" | "update";
 }
 
 export interface ServerFormValues {
@@ -15,6 +17,9 @@ export interface ServerFormValues {
   type: string;
   location: string;
   environment: "beta" | "production";
+  siteMaster?: string;
+  isMaster?: boolean;
+  siteDescription?: string;
 }
 
 export const userLevels = [

@@ -1,37 +1,38 @@
 
-import {
-  TableCell,
-  TableRow,
-} from "@/components/ui/table";
-import { Server } from "../types/server.types";
+import { TableCell, TableRow } from "@/components/ui/table";
 import { ServerStatusBadge } from "./ServerStatusBadge";
-import { EnvironmentBadge } from "./EnvironmentBadge";
 import { ServerLocation } from "./ServerLocation";
 import { ServerActions } from "./ServerActions";
+import { EnvironmentBadge } from "./EnvironmentBadge";
+import { Server } from "../types/server.types";
 
 interface ServerTableRowProps {
   server: Server;
-  onDelete: (id: number) => void;
+  onDelete: (server: Server) => void;
+  onEdit: (server: Server) => void;
 }
 
-export const ServerTableRow = ({ server, onDelete }: ServerTableRowProps) => {
+export function ServerTableRow({ server, onDelete, onEdit }: ServerTableRowProps) {
   return (
-    <TableRow key={server.id}>
+    <TableRow>
       <TableCell className="font-medium">{server.name}</TableCell>
       <TableCell>{server.ipAddress}</TableCell>
-      <TableCell><ServerStatusBadge status={server.status} /></TableCell>
       <TableCell>{server.type}</TableCell>
-      <TableCell>{server.buildPlan.join(", ")}</TableCell>
-      <TableCell>{server.timeOffset}</TableCell>
-      <TableCell>{server.pmFullname}</TableCell>
-      <TableCell>{server.l2Fullname}</TableCell>
-      <TableCell>{server.site}</TableCell>
-      <TableCell><ServerLocation locationValue={server.location} /></TableCell>
-      <TableCell><EnvironmentBadge environment={server.environment} /></TableCell>
-      <TableCell>{server.lastUpdated}</TableCell>
       <TableCell>
-        <ServerActions serverId={server.id} onDelete={onDelete} />
+        <ServerStatusBadge status={server.status} />
+      </TableCell>
+      <TableCell>
+        <ServerLocation location={server.location} />
+      </TableCell>
+      <TableCell>
+        <EnvironmentBadge environment={server.environment} />
+      </TableCell>
+      <TableCell className="text-sm text-muted-foreground">
+        {server.lastUpdated}
+      </TableCell>
+      <TableCell>
+        <ServerActions server={server} onDelete={onDelete} onEdit={onEdit} />
       </TableCell>
     </TableRow>
   );
-};
+}

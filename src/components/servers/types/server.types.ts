@@ -13,4 +13,23 @@ export interface Server {
   site: string;
   location: string;
   environment: "beta" | "production";
+  siteMaster?: string;
+  isMaster?: boolean;
+  siteDescription?: string;
+}
+
+export interface ServerApiPayload {
+  Servername: string;
+  BuildPlan: string[];
+  Site: string;
+  ServerType: string;
+  SiteDescription: string;
+  SiteMaster: string;
+  IsMaster: string;
+  IPAddress: string;
+  TimeOffset: string;
+  PMfullname: string;
+  L2fullname: string;
+  Location: string;
+  Status: string;
 }
