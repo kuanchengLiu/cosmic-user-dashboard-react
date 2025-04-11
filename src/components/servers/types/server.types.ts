@@ -19,19 +19,24 @@ export interface Server {
 }
 
 export interface ServerApiPayload {
-  Servername: string;
-  BuildPlan: string[];
-  Site: string;
-  ServerType: string;
-  SiteDescription: string;
-  SiteMaster: string;
-  IsMaster: string;
-  IPAddress: string;
-  TimeOffset: string;
-  PMfullname: string;
-  L2fullname: string;
-  Location: string;
-  Status: string;
+  documentType: string;
+  actionType: string;
+  properties: {
+    Servername: string;
+    BuildPlan: string[];
+    Site: string;
+    ServerType: string;
+    SiteDescription: string;
+    SiteMaster: string;
+    IsMaster: string;
+    IPAddress: string;
+    TimeOffset: string;
+    PMfullname: string;
+    L2fullname: string;
+    Location: string;
+    Status: string;
+    LastUpdateDt?: string;
+  };
 }
 
 export interface ServerFormValues {
@@ -48,4 +53,38 @@ export interface ServerFormValues {
   siteMaster?: string;
   isMaster?: boolean;
   siteDescription?: string;
+}
+
+export interface UserApiPayload {
+  documentType: string;
+  actionType: string;
+  properties: {
+    Role: string;
+    Fullname: string;
+    Email: string;
+    MGREmail: string;
+    CreatedBy: string;
+    CreatedDt: string;
+  };
+}
+
+export interface User {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  status: "active" | "inactive";
+  lastActive: string;
+  mgrEmail: string;
+  createdBy: string;
+  createdDate: string;
+  avatarUrl?: string;
+}
+
+export interface UserFormValues {
+  name: string;
+  email: string;
+  role: string;
+  mgrEmail: string;
+  status?: "active" | "inactive";
 }

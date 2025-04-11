@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Server } from "../types/server.types";
 import { ServerFormValues } from "../utils/types";
@@ -87,7 +86,7 @@ export const useServers = () => {
       const serverToDelete = servers.find(server => server.id === id);
       if (!serverToDelete) return;
 
-      await deleteServer(id, serverToDelete.environment);
+      await deleteServer(id);
       setServers(servers.filter((server) => server.id !== id));
       
       toast({
@@ -115,7 +114,11 @@ export const useServers = () => {
         status: "offline", // Default status for new servers
         type: serverData.type,
         lastUpdated: new Date().toISOString().replace('T', ' ').substring(0, 19),
-        buildPlan: Array.isArray(serverData.buildPlan) ? serverData.buildPlan : [],
+        buildPlan: Array.isArray(serverData.buildPlan) 
+          ? serverData.buildPlan 
+          : typeof serverData.buildPlan === 'string'
+            ? serverData.buildPlan.split(',').map(item => item.trim())
+            : [],
         timeOffset: serverData.timeOffset,
         pmFullname: serverData.pmFullname,
         l2Fullname: serverData.l2Fullname,
@@ -146,7 +149,11 @@ export const useServers = () => {
               name: serverData.name,
               ipAddress: serverData.ipAddress,
               type: serverData.type,
-              buildPlan: Array.isArray(serverData.buildPlan) ? serverData.buildPlan : [],
+              buildPlan: Array.isArray(serverData.buildPlan) 
+                ? serverData.buildPlan 
+                : typeof serverData.buildPlan === 'string'
+                  ? serverData.buildPlan.split(',').map(item => item.trim())
+                  : [],
               timeOffset: serverData.timeOffset,
               pmFullname: serverData.pmFullname,
               l2Fullname: serverData.l2Fullname,

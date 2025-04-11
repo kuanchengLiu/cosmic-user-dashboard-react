@@ -1,3 +1,4 @@
+
 import { Server, ServerApiPayload, ServerFormValues } from "../types/server.types";
 
 // For demo purposes, I'll keep the API mock and add production/beta URLs
@@ -9,27 +10,55 @@ const getApiUrl = (environment: "beta" | "production" = "beta") => {
 };
 
 // Helper to convert form values to API format
-const mapFormToApiPayload = (data: ServerFormValues): ServerApiPayload => {
+const mapFormToApiPayload = (data: ServerFormValues, actionType: "Create" | "Update" | "Delete"): ServerApiPayload => {
   const buildPlanArray = Array.isArray(data.buildPlan) 
     ? data.buildPlan 
     : typeof data.buildPlan === 'string'
       ? data.buildPlan.split(',').map(item => item.trim())
       : [];
+  
+  // For Delete action, we only need the Servername
+  if (actionType === "Delete") {
+    return {
+      documentType: "Server",
+      actionType: "Delete",
+      properties: {
+        Servername: data.name,
+        BuildPlan: [],
+        Site: "",
+        ServerType: "",
+        SiteDescription: "",
+        SiteMaster: "",
+        IsMaster: "",
+        IPAddress: "",
+        TimeOffset: "",
+        PMfullname: "",
+        L2fullname: "",
+        Location: "",
+        Status: ""
+      }
+    };
+  }
       
   return {
-    Servername: data.name,
-    BuildPlan: buildPlanArray,
-    Site: data.site,
-    ServerType: data.type,
-    SiteDescription: data.siteDescription || "",
-    SiteMaster: data.siteMaster,
-    IsMaster: data.isMaster ? "true" : "false",
-    IPAddress: data.ipAddress,
-    TimeOffset: data.timeOffset,
-    PMfullname: data.pmFullname,
-    L2fullname: data.l2Fullname,
-    Location: data.location,
-    Status: "online" // Default to online for new servers
+    documentType: "Server",
+    actionType: actionType,
+    properties: {
+      Servername: data.name,
+      BuildPlan: buildPlanArray,
+      Site: data.site,
+      ServerType: data.type,
+      SiteDescription: data.siteDescription || "",
+      SiteMaster: data.siteMaster || "",
+      IsMaster: data.isMaster ? "true" : "false",
+      IPAddress: data.ipAddress,
+      TimeOffset: data.timeOffset,
+      PMfullname: data.pmFullname,
+      L2fullname: data.l2Fullname,
+      Location: data.location,
+      Status: "Online", // Default to online for new servers
+      LastUpdateDt: new Date().toISOString()
+    }
   };
 };
 
@@ -100,7 +129,7 @@ export const fetchServers = async (): Promise<Server[]> => {
 
 export const createServer = async (data: ServerFormValues): Promise<Server> => {
   const apiUrl = getApiUrl(data.environment);
-  const payload = mapFormToApiPayload(data);
+  const payload = mapFormToApiPayload(data, "Create");
   
   // In a real app, this would be a POST to your API
   console.log(`POST ${apiUrl}`, payload);
@@ -115,7 +144,7 @@ export const createServer = async (data: ServerFormValues): Promise<Server> => {
         status: "online",
         type: data.type,
         lastUpdated: new Date().toISOString(),
-        buildPlan: Array.isArray(data.buildPlan) ? data.buildPlan : [data.buildPlan as unknown as string],
+        buildPlan: Array.isArray(data.buildPlan) ? data.buildPlan : typeof data.buildPlan === 'string' ? data.buildPlan.split(',').map(item => item.trim()) : [],
         timeOffset: data.timeOffset,
         pmFullname: data.pmFullname,
         l2Fullname: data.l2Fullname,
@@ -132,7 +161,7 @@ export const createServer = async (data: ServerFormValues): Promise<Server> => {
 
 export const updateServer = async (id: number, data: ServerFormValues): Promise<Server> => {
   const apiUrl = getApiUrl(data.environment);
-  const payload = mapFormToApiPayload(data);
+  const payload = mapFormToApiPayload(data, "Update");
   
   // In a real app, this would be a PUT to your API
   console.log(`PUT ${apiUrl}/${id}`, payload);
@@ -147,7 +176,7 @@ export const updateServer = async (id: number, data: ServerFormValues): Promise<
         status: "online", // Assume we're not changing status here
         type: data.type,
         lastUpdated: new Date().toISOString(),
-        buildPlan: Array.isArray(data.buildPlan) ? data.buildPlan : [data.buildPlan as unknown as string],
+        buildPlan: Array.isArray(data.buildPlan) ? data.buildPlan : typeof data.buildPlan === 'string' ? data.buildPlan.split(',').map(item => item.trim()) : [],
         timeOffset: data.timeOffset,
         pmFullname: data.pmFullname,
         l2Fullname: data.l2Fullname,
@@ -162,9 +191,20 @@ export const updateServer = async (id: number, data: ServerFormValues): Promise<
   });
 };
 
-export const deleteServer = async (id: number): Promise<void> => {
+export const deleteServer = async (id: number, environment: "beta" | "production" = "beta"): Promise<void> => {
+  const apiUrl = getApiUrl(environment);
+  
+  // For the delete endpoint, we're using a simpler payload
+  const payload = {
+    documentType: "Server",
+    actionType: "Delete",
+    properties: {
+      Servername: `Server-${id}` // In a real application, you would need the actual server name
+    }
+  };
+  
   // In a real app, this would be a DELETE to your API
-  console.log(`DELETE server with ID: ${id}`);
+  console.log(`DELETE ${apiUrl}/${id}`, payload);
   
   // Mock successful response
   return new Promise((resolve) => {
