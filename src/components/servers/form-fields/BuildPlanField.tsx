@@ -20,31 +20,40 @@ export const BuildPlanField = ({
     <FormField
       control={control}
       name="buildPlan"
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>Build Plan*</FormLabel>
-          <FormControl>
-            <div className="space-y-1">
-              <Input 
-                value={Array.isArray(field.value) ? field.value.join(",") : field.value as string}
-                placeholder="plan1,plan2,plan3" 
-                required 
-                onBlur={(e) => handleFieldChange("buildPlan", e.target.value)}
-                onChange={(e) => {
-                  field.onChange(e.target.value);
-                  handleFieldChange("buildPlan", e.target.value);
-                }}
-              />
-              {validationMessage ? (
-                <p className="text-sm text-red-500">{validationMessage}</p>
-              ) : (
-                <p className="text-xs text-gray-500">{getHelpText("buildPlan")}</p>
-              )}
-            </div>
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
+      render={({ field }) => {
+        // Convert the value to string for display
+        const displayValue = Array.isArray(field.value) 
+          ? field.value.join(",") 
+          : typeof field.value === 'string' 
+            ? field.value 
+            : "";
+            
+        return (
+          <FormItem>
+            <FormLabel>Build Plan*</FormLabel>
+            <FormControl>
+              <div className="space-y-1">
+                <Input 
+                  value={displayValue}
+                  placeholder="plan1,plan2,plan3" 
+                  required 
+                  onBlur={(e) => handleFieldChange("buildPlan", e.target.value)}
+                  onChange={(e) => {
+                    field.onChange(e.target.value);
+                    handleFieldChange("buildPlan", e.target.value);
+                  }}
+                />
+                {validationMessage ? (
+                  <p className="text-sm text-red-500">{validationMessage}</p>
+                ) : (
+                  <p className="text-xs text-gray-500">{getHelpText("buildPlan")}</p>
+                )}
+              </div>
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        );
+      }}
     />
   );
 };

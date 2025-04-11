@@ -30,13 +30,13 @@ export function ServerList({ servers, onDelete, onEdit }: ServerListProps) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Name</TableHead>
-            {!isMobile && <TableHead>IP Address</TableHead>}
-            <TableHead>Type</TableHead>
-            <TableHead>Status</TableHead>
-            {!isMobile && <TableHead>Location</TableHead>}
-            {!isMobile && <TableHead>Environment</TableHead>}
-            {!isMobile && <TableHead>Last Updated</TableHead>}
+            <TableHead className="font-medium">Name</TableHead>
+            {!isMobile && <TableHead className="font-medium">IP Address</TableHead>}
+            <TableHead className="font-medium">Type</TableHead>
+            <TableHead className="font-medium">Status</TableHead>
+            {!isMobile && <TableHead className="font-medium">Location</TableHead>}
+            {!isMobile && <TableHead className="font-medium">Environment</TableHead>}
+            {!isMobile && <TableHead className="font-medium">Last Updated</TableHead>}
             <TableHead className="w-[80px]"></TableHead>
           </TableRow>
         </TableHeader>
