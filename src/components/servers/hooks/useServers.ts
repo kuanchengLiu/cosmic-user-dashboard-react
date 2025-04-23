@@ -1,93 +1,63 @@
+
 import { useState } from "react";
 import { Server } from "../types/server.types";
 import { ServerFormValues } from "../utils/types";
-import { createServer, deleteServer, updateServer } from "../services/serverApiService";
+import { createServer, deleteServer, fetchServers, PaginatedResponse, ServerQueryParams, updateServer } from "../services/serverApiService";
 import { useToast } from "@/hooks/use-toast";
+import { useInfiniteQuery } from "@tanstack/react-query";
 
 export const useServers = () => {
   const { toast } = useToast();
-  // Sample data - in a real app, this would come from an API
-  const [servers, setServers] = useState<Server[]>([
-    {
-      id: 1,
-      name: "Web Server 01",
-      ipAddress: "192.168.1.101",
-      status: "online",
-      type: "Web Server",
-      lastUpdated: "2025-04-08 09:30:45",
-      buildPlan: ["deploy", "test"],
-      timeOffset: "UTC+08",
-      pmFullname: "Project Manager",
-      l2Fullname: "L2 Support",
-      site: "SiteA",
-      location: "UNITEDSTATES",
-      environment: "production",
-      siteMaster: "QATESTING2",
-      isMaster: true
-    },
-    {
-      id: 2,
-      name: "Database Server 01",
-      ipAddress: "192.168.1.102",
-      status: "online",
-      type: "Database Server",
-      lastUpdated: "2025-04-08 08:45:12",
-      buildPlan: ["backup", "restore"],
-      timeOffset: "UTC+08",
-      pmFullname: "Project Manager",
-      l2Fullname: "L2 Support",
-      site: "SiteB",
-      location: "GERMANY",
-      environment: "beta",
-      siteMaster: "QATESTING2",
-      isMaster: false
-    },
-    {
-      id: 3,
-      name: "File Server 01",
-      ipAddress: "192.168.1.103",
-      status: "maintenance",
-      type: "File Server",
-      lastUpdated: "2025-04-07 23:15:30",
-      buildPlan: ["sync", "backup"],
-      timeOffset: "UTC+08",
-      pmFullname: "Project Manager",
-      l2Fullname: "L2 Support",
-      site: "SiteA",
-      location: "JAPAN",
-      environment: "beta",
-      siteMaster: "QATESTING2",
-      isMaster: false
-    },
-    {
-      id: 4,
-      name: "Backup Server 01",
-      ipAddress: "192.168.1.104",
-      status: "offline",
-      type: "Backup Server",
-      lastUpdated: "2025-04-08 02:10:18",
-      buildPlan: ["backup", "archive"],
-      timeOffset: "UTC+08",
-      pmFullname: "Project Manager",
-      l2Fullname: "L2 Support",
-      site: "SiteC",
-      location: "SINGAPORE",
-      environment: "production",
-      siteMaster: "QATESTING2",
-      isMaster: false
-    },
-  ]);
-
+  const [searchTerm, setSearchTerm] = useState("");
+  const [activeTab, setActiveTab] = useState<"all" | "beta" | "production">("all");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [currentServer, setCurrentServer] = useState<Server | null>(null);
+
+  // Determine the environment for the API call based on activeTab
+  const environment = activeTab === "all" ? "beta" : activeTab;
+
+  // Use Tanstack's useInfiniteQuery for pagination
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isError,
+    refetch
+  } = useInfiniteQuery({
+    queryKey: ["servers", environment, searchTerm],
+    queryFn: async ({ pageParam = 1 }) => {
+      const params: ServerQueryParams = {
+        page: pageParam,
+        limit: 10,
+        search: searchTerm || undefined,
+        environment: environment === "all" ? "beta" : environment as "beta" | "production"
+      };
+      return fetchServers(params);
+    },
+    getNextPageParam: (lastPage) => lastPage.hasMore ? lastPage.page + 1 : undefined,
+    initialPageParam: 1,
+  });
+
+  // Flatten the server data from all pages
+  const servers: Server[] = data?.pages.flatMap(page => 
+    page.data.map(server => ({
+      ...server,
+      // Set default status if it's null
+      status: server.status || "online"
+    }))
+  ) || [];
 
   const handleDelete = async (id: number) => {
     try {
       const serverToDelete = servers.find(server => server.id === id);
       if (!serverToDelete) return;
 
-      await deleteServer(id);
-      setServers(servers.filter((server) => server.id !== id));
+      await deleteServer(id, serverToDelete.environment);
+      
+      // Refetch the data after deletion
+      refetch();
       
       toast({
         title: "Server Deleted",
@@ -105,32 +75,15 @@ export const useServers = () => {
   
   const handleCreateServer = async (serverData: ServerFormValues) => {
     try {
-      // In a real app, the API would return the created server with its ID
-      // Here we're simulating that by generating an ID
-      const newServer: Server = {
-        id: servers.length > 0 ? Math.max(...servers.map(s => s.id)) + 1 : 1,
-        name: serverData.name,
-        ipAddress: serverData.ipAddress,
-        status: "offline", // Default status for new servers
-        type: serverData.type,
-        lastUpdated: new Date().toISOString().replace('T', ' ').substring(0, 19),
-        buildPlan: Array.isArray(serverData.buildPlan) 
-          ? serverData.buildPlan 
-          : typeof serverData.buildPlan === 'string'
-            ? serverData.buildPlan.split(',').map(item => item.trim())
-            : [],
-        timeOffset: serverData.timeOffset,
-        pmFullname: serverData.pmFullname,
-        l2Fullname: serverData.l2Fullname,
-        site: serverData.site,
-        location: serverData.location,
-        environment: serverData.environment,
-        siteMaster: serverData.siteMaster,
-        isMaster: serverData.isMaster
-      };
-      
       await createServer(serverData);
-      setServers([...servers, newServer]);
+      
+      // Refetch the data after creation
+      refetch();
+      
+      toast({
+        title: "Server Created",
+        description: `Server has been created successfully.`,
+      });
     } catch (error) {
       console.error("Failed to create server:", error);
       throw error; // Let the form component handle the error
@@ -141,31 +94,13 @@ export const useServers = () => {
     try {
       await updateServer(serverId, serverData);
       
-      // Update the server in the local state
-      setServers(servers.map(server => 
-        server.id === serverId 
-          ? {
-              ...server,
-              name: serverData.name,
-              ipAddress: serverData.ipAddress,
-              type: serverData.type,
-              buildPlan: Array.isArray(serverData.buildPlan) 
-                ? serverData.buildPlan 
-                : typeof serverData.buildPlan === 'string'
-                  ? serverData.buildPlan.split(',').map(item => item.trim())
-                  : [],
-              timeOffset: serverData.timeOffset,
-              pmFullname: serverData.pmFullname,
-              l2Fullname: serverData.l2Fullname,
-              site: serverData.site,
-              location: serverData.location,
-              environment: serverData.environment,
-              siteMaster: serverData.siteMaster,
-              isMaster: serverData.isMaster,
-              lastUpdated: new Date().toISOString().replace('T', ' ').substring(0, 19),
-            }
-          : server
-      ));
+      // Refetch the data after update
+      refetch();
+      
+      toast({
+        title: "Server Updated",
+        description: `Server has been updated successfully.`,
+      });
       
       setIsEditModalOpen(false);
       setCurrentServer(null);
@@ -193,6 +128,15 @@ export const useServers = () => {
     isEditModalOpen,
     currentServer,
     openEditModal,
-    closeEditModal
+    closeEditModal,
+    searchTerm,
+    setSearchTerm,
+    activeTab,
+    setActiveTab,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isError
   };
 };

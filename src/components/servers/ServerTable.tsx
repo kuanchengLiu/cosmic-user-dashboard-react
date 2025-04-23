@@ -1,22 +1,24 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Loader } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import ServerForm from "./ServerForm";
 import { useServers } from "./hooks/useServers";
 import { ServerSearch } from "./ui/ServerSearch";
 import { ServerList } from "./ui/ServerList";
-import { filterServers } from "./utils/filterServers";
 import { DeleteServerDialog } from "./ui/DeleteServerDialog";
 import { Server } from "./types/server.types";
+import { useInView } from "react-intersection-observer";
+import { useEffect } from "react";
 
 const ServerTable = () => {
-  const [searchTerm, setSearchTerm] = useState("");
   const [showForm, setShowForm] = useState(false);
-  const [activeTab, setActiveTab] = useState<"all" | "beta" | "production">("all");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [serverToDelete, setServerToDelete] = useState<Server | null>(null);
+  
+  // Create a ref for infinite scrolling
+  const { ref, inView } = useInView();
   
   const { 
     servers, 
@@ -26,10 +28,24 @@ const ServerTable = () => {
     isEditModalOpen,
     currentServer,
     openEditModal,
-    closeEditModal
+    closeEditModal,
+    searchTerm,
+    setSearchTerm,
+    activeTab,
+    setActiveTab,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isError
   } = useServers();
   
-  const filteredServers = filterServers(servers, activeTab, searchTerm);
+  // Fetch more data when scrolled to the bottom
+  useEffect(() => {
+    if (inView && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const confirmDelete = (server: Server) => {
     setServerToDelete(server);
@@ -39,6 +55,7 @@ const ServerTable = () => {
   const handleDeleteConfirm = async () => {
     if (serverToDelete) {
       await handleDelete(serverToDelete.id);
+      setDeleteDialogOpen(false);
     }
   };
 
@@ -50,20 +67,20 @@ const ServerTable = () => {
         onValueChange={(value) => setActiveTab(value as "all" | "beta" | "production")}
         className="w-full"
       >
-        <div className="flex justify-between items-center">
-          <TabsList>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <TabsList className="w-full md:w-auto">
             <TabsTrigger value="all">All Servers</TabsTrigger>
             <TabsTrigger value="beta">Beta Servers</TabsTrigger>
             <TabsTrigger value="production">Production Servers</TabsTrigger>
           </TabsList>
           
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-4 w-full md:w-auto">
             <ServerSearch 
               searchTerm={searchTerm} 
               setSearchTerm={setSearchTerm} 
             />
             <Button 
-              className="flex items-center gap-1"
+              className="flex items-center gap-1 w-full md:w-auto"
               onClick={() => setShowForm(true)}
             >
               <Plus className="h-4 w-4" />
@@ -74,26 +91,71 @@ const ServerTable = () => {
 
         <TabsContent value="all" className="mt-4">
           <ServerList 
-            servers={filteredServers} 
+            servers={servers}
             onDelete={confirmDelete}
             onEdit={openEditModal}
+            isLoading={isLoading}
           />
+          {hasNextPage && (
+            <div ref={ref} className="py-4 flex justify-center">
+              {isFetchingNextPage ? (
+                <div className="flex items-center gap-2">
+                  <Loader className="h-4 w-4 animate-spin" />
+                  <span>Loading more...</span>
+                </div>
+              ) : (
+                <Button variant="outline" onClick={() => fetchNextPage()}>
+                  Load More
+                </Button>
+              )}
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="beta" className="mt-4">
           <ServerList 
-            servers={filteredServers} 
+            servers={servers}
             onDelete={confirmDelete}
             onEdit={openEditModal}
+            isLoading={isLoading}
           />
+          {hasNextPage && (
+            <div ref={ref} className="py-4 flex justify-center">
+              {isFetchingNextPage ? (
+                <div className="flex items-center gap-2">
+                  <Loader className="h-4 w-4 animate-spin" />
+                  <span>Loading more...</span>
+                </div>
+              ) : (
+                <Button variant="outline" onClick={() => fetchNextPage()}>
+                  Load More
+                </Button>
+              )}
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="production" className="mt-4">
           <ServerList 
-            servers={filteredServers} 
+            servers={servers}
             onDelete={confirmDelete}
             onEdit={openEditModal}
+            isLoading={isLoading}
           />
+          {hasNextPage && (
+            <div ref={ref} className="py-4 flex justify-center">
+              {isFetchingNextPage ? (
+                <div className="flex items-center gap-2">
+                  <Loader className="h-4 w-4 animate-spin" />
+                  <span>Loading more...</span>
+                </div>
+              ) : (
+                <Button variant="outline" onClick={() => fetchNextPage()}>
+                  Load More
+                </Button>
+              )}
+            </div>
+          )}
         </TabsContent>
       </Tabs>
       

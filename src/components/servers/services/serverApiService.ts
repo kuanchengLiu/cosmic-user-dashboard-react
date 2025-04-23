@@ -1,4 +1,3 @@
-
 import { Server, ServerApiPayload, ServerFormValues } from "../types/server.types";
 
 // For demo purposes, I'll keep the API mock and add production/beta URLs
@@ -62,67 +61,75 @@ const mapFormToApiPayload = (data: ServerFormValues, actionType: "Create" | "Upd
   };
 };
 
-// Demo API calls
-export const fetchServers = async (): Promise<Server[]> => {
-  // Mock API call - in a real app, this would be a fetch to your API
+// New interface for pagination and search params
+export interface ServerQueryParams {
+  page: number;
+  limit: number;
+  search?: string;
+  environment: "beta" | "production";
+}
+
+// New interface for paginated response
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  hasMore: boolean;
+}
+
+// Demo API calls with pagination and search
+export const fetchServers = async (params: ServerQueryParams): Promise<PaginatedResponse<Server>> => {
+  const { page, limit, search, environment } = params;
+  const apiUrl = getApiUrl(environment);
+  
+  // In a real app, this would be a GET request with query parameters
+  console.log(`GET ${apiUrl}?page=${page}&limit=${limit}${search ? `&search=${search}` : ''}`);
+  
+  // Mock data for demonstration
   return new Promise((resolve) => {
     setTimeout(() => {
-      resolve([
-        {
-          id: 1,
-          name: "WebServer001",
-          ipAddress: "192.168.1.1",
-          status: "online",
-          type: "Web Server",
-          lastUpdated: "2023-04-05T14:48:00.000Z",
-          buildPlan: ["Plan A", "Plan B"],
-          timeOffset: "UTC+0",
-          pmFullname: "John Doe",
-          l2Fullname: "Jane Smith",
-          site: "US-East",
-          location: "New York",
-          environment: "beta",
-          siteMaster: "QATESTING2",
-          isMaster: true,
-          siteDescription: "East Coast Data Center"
-        },
-        {
-          id: 2,
-          name: "DBServer001",
-          ipAddress: "192.168.1.2",
-          status: "maintenance",
-          type: "Database Server",
-          lastUpdated: "2023-04-04T10:30:00.000Z",
-          buildPlan: ["Plan C"],
-          timeOffset: "UTC+0",
-          pmFullname: "Alice Johnson",
-          l2Fullname: "Bob Brown",
-          site: "US-West",
-          location: "San Francisco",
-          environment: "production",
-          siteMaster: "PRODMASTER",
-          isMaster: false,
-          siteDescription: "West Coast Data Center"
-        },
-        {
-          id: 3,
-          name: "AppServer001",
-          ipAddress: "192.168.1.3",
-          status: "offline",
-          type: "Application Server",
-          lastUpdated: "2023-04-03T18:15:00.000Z",
-          buildPlan: ["Plan A", "Plan D"],
-          timeOffset: "UTC+1",
-          pmFullname: "Charlie Wilson",
-          l2Fullname: "Diana Miller",
-          site: "EU-Central",
-          location: "Berlin",
-          environment: "beta",
-          siteMaster: "EUMASTER",
-          isMaster: false,
-          siteDescription: "European Data Center"
+      // Generate mock servers based on page, limit, and search
+      const mockServers: Server[] = [];
+      const totalServers = 120; // Mock total number of servers
+      const startIndex = (page - 1) * limit;
+      const endIndex = Math.min(startIndex + limit, totalServers);
+      
+      for (let i = startIndex; i < endIndex; i++) {
+        const serverNumber = i + 1;
+        const serverName = `Server-${serverNumber}`;
+        
+        // If search is provided, only include servers that match the search term
+        if (search && !serverName.toLowerCase().includes(search.toLowerCase())) {
+          continue;
         }
-      ]);
+        
+        mockServers.push({
+          id: serverNumber,
+          name: serverName,
+          ipAddress: `192.168.1.${serverNumber % 255}`,
+          status: i % 3 === 0 ? "online" : i % 3 === 1 ? "offline" : "maintenance",
+          type: i % 2 === 0 ? "Web Server" : "Database Server",
+          lastUpdated: new Date().toISOString(),
+          buildPlan: [`Plan-${serverNumber % 3 + 1}`],
+          timeOffset: "UTC+0",
+          pmFullname: "Project Manager",
+          l2Fullname: "L2 Support",
+          site: `Site-${String.fromCharCode(65 + (i % 26))}`,
+          location: i % 4 === 0 ? "UNITEDSTATES" : i % 4 === 1 ? "GERMANY" : i % 4 === 2 ? "JAPAN" : "SINGAPORE",
+          environment: i % 2 === 0 ? "beta" : "production",
+          siteMaster: "QATESTING2",
+          isMaster: i % 5 === 0
+        });
+      }
+      
+      resolve({
+        data: mockServers,
+        total: totalServers,
+        page,
+        limit,
+        hasMore: endIndex < totalServers
+      });
     }, 500);
   });
 };

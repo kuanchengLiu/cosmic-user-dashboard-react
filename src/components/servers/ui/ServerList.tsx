@@ -11,15 +11,26 @@ import { ServerTableRow } from "./ServerTableRow";
 import { EmptyServerTable } from "./EmptyServerTable";
 import { Server } from "../types/server.types";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Loader } from "lucide-react";
 
 interface ServerListProps {
   servers: Server[];
   onDelete: (server: Server) => void;
   onEdit: (server: Server) => void;
+  isLoading?: boolean;
 }
 
-export function ServerList({ servers, onDelete, onEdit }: ServerListProps) {
+export function ServerList({ servers, onDelete, onEdit, isLoading = false }: ServerListProps) {
   const isMobile = useIsMobile();
+  
+  if (isLoading && servers.length === 0) {
+    return (
+      <div className="flex justify-center items-center p-8">
+        <Loader className="h-6 w-6 animate-spin mr-2" />
+        <p>Loading servers...</p>
+      </div>
+    );
+  }
   
   if (servers.length === 0) {
     return <EmptyServerTable colSpan={isMobile ? 4 : 8} />;
