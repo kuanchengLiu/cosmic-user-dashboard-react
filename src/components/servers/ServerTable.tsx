@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Loader } from "lucide-react";
@@ -62,14 +61,13 @@ const ServerTable = () => {
   return (
     <div className="space-y-4">
       <Tabs 
-        defaultValue="all" 
+        defaultValue="beta" 
         value={activeTab}
-        onValueChange={(value) => setActiveTab(value as "all" | "beta" | "production")}
+        onValueChange={(value: string) => setActiveTab(value as "beta" | "production")}
         className="w-full"
       >
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <TabsList className="w-full md:w-auto">
-            <TabsTrigger value="all">All Servers</TabsTrigger>
             <TabsTrigger value="beta">Beta Servers</TabsTrigger>
             <TabsTrigger value="production">Production Servers</TabsTrigger>
           </TabsList>
@@ -88,29 +86,6 @@ const ServerTable = () => {
             </Button>
           </div>
         </div>
-
-        <TabsContent value="all" className="mt-4">
-          <ServerList 
-            servers={servers}
-            onDelete={confirmDelete}
-            onEdit={openEditModal}
-            isLoading={isLoading}
-          />
-          {hasNextPage && (
-            <div ref={ref} className="py-4 flex justify-center">
-              {isFetchingNextPage ? (
-                <div className="flex items-center gap-2">
-                  <Loader className="h-4 w-4 animate-spin" />
-                  <span>Loading more...</span>
-                </div>
-              ) : (
-                <Button variant="outline" onClick={() => fetchNextPage()}>
-                  Load More
-                </Button>
-              )}
-            </div>
-          )}
-        </TabsContent>
 
         <TabsContent value="beta" className="mt-4">
           <ServerList 
