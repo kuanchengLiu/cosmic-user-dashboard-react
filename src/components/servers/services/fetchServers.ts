@@ -5,13 +5,26 @@ import { getApiUrl, ServerQueryParams, PaginatedResponse } from "./apiConfig";
 export const fetchServers = async (params: ServerQueryParams): Promise<PaginatedResponse<Server>> => {
   const { page, limit, search, environment } = params;
   const apiUrl = getApiUrl(environment);
-  const queryParams = new URLSearchParams({
-    page: page.toString(),
-    limit: limit.toString(),
-    ...(search && { search })
+  
+  // Now using POST method with parameters in the request body instead of URL query params
+  const payload = {
+    documentType: "Server",
+    actionType: "List",
+    properties: {
+      page: page,
+      limit: limit,
+      search: search || ""
+    }
+  };
+
+  const response = await fetch(apiUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
   });
 
-  const response = await fetch(`${apiUrl}?${queryParams}`);
   if (!response.ok) {
     throw new Error('Failed to fetch servers');
   }

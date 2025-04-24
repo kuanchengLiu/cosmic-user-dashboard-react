@@ -64,17 +64,42 @@ export const deleteServer = async (id: number, environment: "beta" | "production
   }
 };
 
-const mapFormToApiPayload = (data: ServerFormValues, actionType: "Create" | "Update" | "Delete"): ServerApiPayload => {
+export const fetchServer = async (id: number, environment: "beta" | "production" = "beta"): Promise<Server> => {
+  const apiUrl = getApiUrl(environment);
+  
+  const payload = {
+    documentType: "Server",
+    actionType: "Read",
+    properties: {
+      Servername: `Server-${id}`
+    }
+  };
+  
+  const response = await fetch(`${apiUrl}/${id}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch server');
+  }
+
+  return response.json();
+};
+
+const mapFormToApiPayload = (data: ServerFormValues, actionType: "Create" | "Update" | "Delete" | "Read"): ServerApiPayload => {
   const buildPlanArray = Array.isArray(data.buildPlan) 
     ? data.buildPlan 
     : typeof data.buildPlan === 'string'
       ? data.buildPlan.split(',').map(item => item.trim())
       : [];
   
-  if (actionType === "Delete") {
+  if (actionType === "Delete" || actionType === "Read") {
     return {
       documentType: "Server",
-      actionType: "Delete",
+      actionType: actionType,
       properties: {
         Servername: data.name,
         BuildPlan: [],
