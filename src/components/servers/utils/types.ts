@@ -1,4 +1,3 @@
-
 export interface ServerFormProps {
   onClose: () => void;
   onSubmit: (data: ServerFormValues) => void;
@@ -9,7 +8,7 @@ export interface ServerFormProps {
 export interface ServerFormValues {
   name: string;
   ipAddress: string;
-  buildPlan: string[];
+  buildPlan: string[] | string;
   timeOffset: string;
   pmFullname: string;
   l2Fullname: string;
@@ -20,6 +19,7 @@ export interface ServerFormValues {
   siteMaster?: string;
   isMaster?: boolean;
   siteDescription?: string;
+  status: ServerStatus;
 }
 
 export const userLevels = [
@@ -70,3 +70,11 @@ export const serverLocations = [
   { value: "CHINA CHONGQING", label: "China Chongqing" },
   { value: "THAILNAD", label: "Thailnad" },
 ];
+
+export const serverStatuses = [
+  "online",
+  "offline",
+  "maintenance"
+] as const;
+
+export type ServerStatus = (typeof serverStatuses)[number];

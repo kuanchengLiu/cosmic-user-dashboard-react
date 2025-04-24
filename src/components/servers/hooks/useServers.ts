@@ -1,20 +1,16 @@
-
 import { useState } from "react";
 import { Server } from "../types/server.types";
 import { ServerFormValues } from "../utils/types";
-import { createServer, deleteServer, fetchServers, PaginatedResponse, ServerQueryParams, updateServer } from "../services/serverApiService";
+import { createServer, deleteServer, fetchServers, updateServer } from "../services/serverApiService";
 import { useToast } from "@/hooks/use-toast";
 import { useInfiniteQuery } from "@tanstack/react-query";
 
 export const useServers = () => {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeTab, setActiveTab] = useState<"all" | "beta" | "production">("all");
+  const [activeTab, setActiveTab] = useState<"beta" | "production">("beta");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [currentServer, setCurrentServer] = useState<Server | null>(null);
-
-  // Determine the environment for the API call based on activeTab
-  const environment = activeTab === "all" ? "beta" : activeTab;
 
   // Use Tanstack's useInfiniteQuery for pagination
   const {
@@ -26,13 +22,13 @@ export const useServers = () => {
     isError,
     refetch
   } = useInfiniteQuery({
-    queryKey: ["servers", environment, searchTerm],
+    queryKey: ["servers", activeTab, searchTerm],
     queryFn: async ({ pageParam = 1 }) => {
-      const params: ServerQueryParams = {
+      const params = {
         page: pageParam,
         limit: 10,
         search: searchTerm || undefined,
-        environment: environment === "all" ? "beta" : environment as "beta" | "production"
+        environment: activeTab
       };
       return fetchServers(params);
     },

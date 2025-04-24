@@ -1,6 +1,5 @@
 import { Server, ServerApiPayload, ServerFormValues } from "../types/server.types";
 
-// For demo purposes, I'll keep the API mock and add production/beta URLs
 const BETA_API_URL = "https://beta-api.example.com/servers";
 const PRODUCTION_API_URL = "https://api.example.com/servers";
 
@@ -8,60 +7,6 @@ const getApiUrl = (environment: "beta" | "production" = "beta") => {
   return environment === "beta" ? BETA_API_URL : PRODUCTION_API_URL;
 };
 
-// Helper to convert form values to API format
-const mapFormToApiPayload = (data: ServerFormValues, actionType: "Create" | "Update" | "Delete"): ServerApiPayload => {
-  const buildPlanArray = Array.isArray(data.buildPlan) 
-    ? data.buildPlan 
-    : typeof data.buildPlan === 'string'
-      ? data.buildPlan.split(',').map(item => item.trim())
-      : [];
-  
-  // For Delete action, we only need the Servername
-  if (actionType === "Delete") {
-    return {
-      documentType: "Server",
-      actionType: "Delete",
-      properties: {
-        Servername: data.name,
-        BuildPlan: [],
-        Site: "",
-        ServerType: "",
-        SiteDescription: "",
-        SiteMaster: "",
-        IsMaster: "",
-        IPAddress: "",
-        TimeOffset: "",
-        PMfullname: "",
-        L2fullname: "",
-        Location: "",
-        Status: ""
-      }
-    };
-  }
-      
-  return {
-    documentType: "Server",
-    actionType: actionType,
-    properties: {
-      Servername: data.name,
-      BuildPlan: buildPlanArray,
-      Site: data.site,
-      ServerType: data.type,
-      SiteDescription: data.siteDescription || "",
-      SiteMaster: data.siteMaster || "",
-      IsMaster: data.isMaster ? "true" : "false",
-      IPAddress: data.ipAddress,
-      TimeOffset: data.timeOffset,
-      PMfullname: data.pmFullname,
-      L2fullname: data.l2Fullname,
-      Location: data.location,
-      Status: "Online", // Default to online for new servers
-      LastUpdateDt: new Date().toISOString()
-    }
-  };
-};
-
-// New interface for pagination and search params
 export interface ServerQueryParams {
   page: number;
   limit: number;
@@ -69,7 +14,6 @@ export interface ServerQueryParams {
   environment: "beta" | "production";
 }
 
-// New interface for paginated response
 export interface PaginatedResponse<T> {
   data: T[];
   total: number;
@@ -78,60 +22,31 @@ export interface PaginatedResponse<T> {
   hasMore: boolean;
 }
 
-// Demo API calls with pagination and search
 export const fetchServers = async (params: ServerQueryParams): Promise<PaginatedResponse<Server>> => {
   const { page, limit, search, environment } = params;
   const apiUrl = getApiUrl(environment);
-  
-  // In a real app, this would be a GET request with query parameters
-  console.log(`GET ${apiUrl}?page=${page}&limit=${limit}${search ? `&search=${search}` : ''}`);
-  
-  // Mock data for demonstration
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      // Generate mock servers based on page, limit, and search
-      const mockServers: Server[] = [];
-      const totalServers = 120; // Mock total number of servers
-      const startIndex = (page - 1) * limit;
-      const endIndex = Math.min(startIndex + limit, totalServers);
-      
-      for (let i = startIndex; i < endIndex; i++) {
-        const serverNumber = i + 1;
-        const serverName = `Server-${serverNumber}`;
-        
-        // If search is provided, only include servers that match the search term
-        if (search && !serverName.toLowerCase().includes(search.toLowerCase())) {
-          continue;
-        }
-        
-        mockServers.push({
-          id: serverNumber,
-          name: serverName,
-          ipAddress: `192.168.1.${serverNumber % 255}`,
-          status: i % 3 === 0 ? "online" : i % 3 === 1 ? "offline" : "maintenance",
-          type: i % 2 === 0 ? "Web Server" : "Database Server",
-          lastUpdated: new Date().toISOString(),
-          buildPlan: [`Plan-${serverNumber % 3 + 1}`],
-          timeOffset: "UTC+0",
-          pmFullname: "Project Manager",
-          l2Fullname: "L2 Support",
-          site: `Site-${String.fromCharCode(65 + (i % 26))}`,
-          location: i % 4 === 0 ? "UNITEDSTATES" : i % 4 === 1 ? "GERMANY" : i % 4 === 2 ? "JAPAN" : "SINGAPORE",
-          environment: i % 2 === 0 ? "beta" : "production",
-          siteMaster: "QATESTING2",
-          isMaster: i % 5 === 0
-        });
-      }
-      
-      resolve({
-        data: mockServers,
-        total: totalServers,
-        page,
-        limit,
-        hasMore: endIndex < totalServers
-      });
-    }, 500);
+  const queryParams = new URLSearchParams({
+    page: page.toString(),
+    limit: limit.toString(),
+    ...(search && { search })
   });
+
+  const response = await fetch(`${apiUrl}?${queryParams}`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch servers');
+  }
+
+  const data = await response.json();
+  return {
+    data: data.servers.map((server: any) => ({
+      ...server,
+      status: server.status || "online" // Set default status if null
+    })),
+    total: data.total,
+    page,
+    limit,
+    hasMore: page * limit < data.total
+  };
 };
 
 export const createServer = async (data: ServerFormValues): Promise<Server> => {
@@ -219,4 +134,55 @@ export const deleteServer = async (id: number, environment: "beta" | "production
       resolve();
     }, 500);
   });
+};
+
+const mapFormToApiPayload = (data: ServerFormValues, actionType: "Create" | "Update" | "Delete"): ServerApiPayload => {
+  const buildPlanArray = Array.isArray(data.buildPlan) 
+    ? data.buildPlan 
+    : typeof data.buildPlan === 'string'
+      ? data.buildPlan.split(',').map(item => item.trim())
+      : [];
+  
+  if (actionType === "Delete") {
+    return {
+      documentType: "Server",
+      actionType: "Delete",
+      properties: {
+        Servername: data.name,
+        BuildPlan: [],
+        Site: "",
+        ServerType: "",
+        SiteDescription: "",
+        SiteMaster: "",
+        IsMaster: "",
+        IPAddress: "",
+        TimeOffset: "",
+        PMfullname: "",
+        L2fullname: "",
+        Location: "",
+        Status: ""
+      }
+    };
+  }
+      
+  return {
+    documentType: "Server",
+    actionType: actionType,
+    properties: {
+      Servername: data.name,
+      BuildPlan: buildPlanArray,
+      Site: data.site,
+      ServerType: data.type,
+      SiteDescription: data.siteDescription || "",
+      SiteMaster: data.siteMaster || "",
+      IsMaster: data.isMaster ? "true" : "false",
+      IPAddress: data.ipAddress,
+      TimeOffset: data.timeOffset,
+      PMfullname: data.pmFullname,
+      L2fullname: data.l2Fullname,
+      Location: data.location,
+      Status: "Online",
+      LastUpdateDt: new Date().toISOString()
+    }
+  };
 };

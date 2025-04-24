@@ -1,4 +1,3 @@
-
 import { Form } from "@/components/ui/form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ServerFormProps } from "./utils/types";
@@ -15,6 +14,7 @@ import { SiteMasterField } from "./form-fields/SiteMasterField";
 import { ServerFormModal } from "./ui/ServerFormModal";
 import { ServerFormActions } from "./ui/ServerFormActions";
 import { useServerForm } from "./hooks/useServerForm";
+import { ServerStatusField } from "./form-fields/ServerStatusField";
 
 const ServerForm = ({ onClose, onSubmit, initialData, mode = "create" }: ServerFormProps) => {
   const {
@@ -115,6 +115,12 @@ const ServerForm = ({ onClose, onSubmit, initialData, mode = "create" }: ServerF
                 handleFieldChange={handleFieldChange}
               />
             </div>
+            
+            <ServerStatusField 
+              control={form.control}
+              validationMessage={validationMessages.status}
+              handleFieldChange={handleFieldChange}
+            />
             
             <ServerFormActions 
               onClose={onClose} 

@@ -1,8 +1,7 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
-import { ServerFormValues } from "../utils/types";
+import { ServerFormValues, serverStatuses } from "../utils/types";
 import { validateField } from "../utils/validation";
 import { createServer, updateServer } from "../services/serverApiService";
 
@@ -38,7 +37,8 @@ export function useServerForm({
       environment: "beta",
       siteMaster: "QATESTING2",
       isMaster: false,
-      siteDescription: ""
+      siteDescription: "",
+      status: "online"
     },
   });
   
@@ -62,17 +62,15 @@ export function useServerForm({
   };
   
   const handleSubmit = async (data: ServerFormValues) => {
-    // Process buildPlan from string to array if it's a string
     const processedData = {
       ...data,
       buildPlan: Array.isArray(data.buildPlan) 
         ? data.buildPlan 
-        : typeof data.buildPlan === 'string'
-          ? data.buildPlan.split(',').map(item => item.trim()) 
+        : data.buildPlan
+          ? data.buildPlan.split(',').map(item => item.trim())
           : []
     };
     
-    // Check for validation messages
     if (Object.keys(validationMessages).length > 0) {
       toast({
         variant: "destructive",
@@ -85,7 +83,6 @@ export function useServerForm({
     setIsSubmitting(true);
     
     try {
-      // Call the API based on mode
       if (mode === "create") {
         await createServer(processedData);
         toast({
@@ -94,7 +91,6 @@ export function useServerForm({
           variant: "default"
         });
       } else {
-        // Assuming the id is passed as part of initialData
         if (initialData && 'id' in initialData) {
           await updateServer((initialData as any).id, processedData);
           toast({
@@ -105,7 +101,6 @@ export function useServerForm({
         }
       }
       
-      // Call the onSubmit callback with the processed data
       onSubmit(processedData);
       onClose();
     } catch (error) {
